@@ -1,21 +1,33 @@
-import { resource, computed, signal, ResourceRef, ResourceLoaderParams } from '@angular/core';
+import {
+  resource,
+  computed,
+  signal,
+  ResourceRef,
+  ResourceLoaderParams,
+  inject,
+} from '@angular/core';
 import { ResourcePlusOptions } from '../shared/interfaces/options';
 import { ResourcePlusRef } from '../shared/interfaces/ref';
 import { executeRetryLoader } from '../features/retry-handler';
 import { createSwrBuffer } from '../features/swr-handler';
+import { RESOURCE_PLUS_CONFIG } from '../shared/tokens/config.token';
 
 export function resourcePlus<T, P>(options: ResourcePlusOptions<T, P>): ResourcePlusRef<T> {
+  const globalConfig = inject(RESOURCE_PLUS_CONFIG, { optional: true });
+
   const lastUpdated = signal<Date | null>(null);
   const retryAttempt = signal(0);
 
   const loader = 'loader' in options ? options.loader : undefined;
   const stream = 'stream' in options ? options.stream : undefined;
-  const swrEnabled = options.swr !== false;
+
+  const swrEnabled = options.swr ?? globalConfig?.swr ?? true;
+  const retryConfig = options.retry ?? globalConfig?.retry;
 
   const enhancedLoader = loader
     ? async (ctx: ResourceLoaderParams<P>): Promise<T> => {
-        const result = options.retry
-          ? await executeRetryLoader(ctx, loader, options.retry, (a) => retryAttempt.set(a))
+        const result = retryConfig
+          ? await executeRetryLoader(ctx, loader, retryConfig, (a) => retryAttempt.set(a))
           : await Promise.resolve(loader(ctx));
 
         lastUpdated.set(new Date());
