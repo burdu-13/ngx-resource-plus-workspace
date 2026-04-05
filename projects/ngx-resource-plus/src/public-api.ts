@@ -1,5 +1,6 @@
-/*
- * Public API Surface of ngx-resource-plus
- */
+export * from './lib/core/resource-plus';
 
-export * from './lib/ngx-resource-plus';
+export * from './lib/shared/interfaces/options';
+export * from './lib/shared/interfaces/ref';
+
+export * from './lib/shared/tokens/config.token';
