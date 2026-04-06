@@ -19,16 +19,11 @@ import { DatePipe } from '@angular/common';
 export class App {
   private readonly requestTrigger: WritableSignal<number> = signal(0);
 
-  /**
-   * Factory function to generate an isolated flaky API per resource.
-   * This prevents race conditions on the attempt counter.
-   */
   private createFlakyApi(identifier: string) {
     let attemptCounter = 0;
 
     return async (ctx: ResourceLoaderParams<number>): Promise<string> => {
       attemptCounter++;
-
       await new Promise((resolve) => setTimeout(resolve, 800));
 
       if (attemptCounter % 3 !== 0) {

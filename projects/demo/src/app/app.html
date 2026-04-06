@@ -1,61 +1,86 @@
-<main class="demo-container">
-  <header class="demo-header">
-    <h1>ngx-resource-plus</h1>
-    <button class="btn-primary" (click)="triggerReload()">Reload Both Resources</button>
+<main class="dashboard">
+  <header class="header">
+    <div class="header-title">
+      <h1>ngx-resource-plus</h1>
+      <p class="subtitle">
+        Simulating a flaky network (fails twice, succeeds third). Watch the UX difference.
+      </p>
+    </div>
+    <button class="btn-primary" (click)="triggerReload()">
+      <span class="btn-text">Trigger Fetch</span>
+    </button>
   </header>
 
-  <section class="grid-layout">
-    <article class="card">
-      <h2 class="card-title">Standard resource()</h2>
-      <div class="status-bar">
-        <span
-          >Status: <strong>{{ native.status() }}</strong></span
-        >
-        @if (native.isLoading()) {
-          <span class="indicator loading">Loading...</span>
-        }
+  <section class="grid">
+    <article class="panel standard-panel">
+      <header class="panel-header">
+        <h2>Standard resource()</h2>
+        <div class="feature-list">
+          <span class="trait negative">Flickers on reload</span>
+          <span class="trait negative">Crashes on first error</span>
+        </div>
+      </header>
+
+      <div class="status-ribbon">
+        <span class="status-badge" [attr.data-status]="native.status()">
+          Status: {{ native.status() }}
+        </span>
       </div>
 
-      <div class="content-box">
-        @if (native.value(); as data) {
-          <div class="data success">{{ data }}</div>
-        } @else if (native.error()) {
-          <div class="data error">Error: {{ native.error() }}</div>
+      <div class="data-window" [class.loading]="native.isLoading()" [class.error]="native.error()">
+        @if (native.error(); as err) {
+          <div class="payload-error"><strong>Fetch Failed:</strong> {{ err }}</div>
+        } @else if (native.hasValue()) {
+          <div class="payload">{{ native.value() }}</div>
         } @else {
-          <div class="data empty">No Data (Flicker)</div>
+          <div class="payload-empty">
+            <div class="spinner"></div>
+            <span>No Data (Flicker)</span>
+          </div>
         }
       </div>
     </article>
 
-    <article class="card plus">
-      <h2 class="card-title">Enhanced resourcePlus()</h2>
-      <div class="status-bar">
-        <span
-          >Status: <strong>{{ enhanced.status() }}</strong></span
-        >
-        @if (enhanced.isLoading()) {
-          <span class="indicator loading">
-            {{ enhanced.isStale() ? 'Revalidating...' : 'Loading...' }}
-          </span>
-        }
+    <article class="panel enhanced-panel">
+      <header class="panel-header">
+        <h2>Enhanced resourcePlus()</h2>
+        <div class="feature-list">
+          <span class="trait positive">SWR (Flicker-free)</span>
+          <span class="trait positive">Auto-Retries</span>
+        </div>
+      </header>
+
+      <div class="status-ribbon">
+        <span class="status-badge" [attr.data-status]="enhanced.status()">
+          Status: {{ enhanced.status() }}
+        </span>
+        <div class="meta-pills">
+          @let retries = enhanced.retryAttempt();
+          @let lastUp = enhanced.lastUpdated();
+
+          @if (retries > 0) {
+            <span class="pill warning">Retry: {{ retries }}</span>
+          }
+          @if (lastUp) {
+            <span class="pill success">Fresh: {{ lastUp | date: 'HH:mm:ss' }}</span>
+          }
+        </div>
       </div>
 
-      <div class="meta-tags">
-        @if (enhanced.retryAttempt() > 0) {
-          <span class="tag warning">Retry Attempt: {{ enhanced.retryAttempt() }}</span>
+      <div class="data-window" [class.stale]="enhanced.isStale()" [class.error]="enhanced.error()">
+        @if (enhanced.isStale()) {
+          <div class="revalidating-badge"><span class="pulse"></span> Revalidating</div>
         }
-        @if (enhanced.lastUpdated()) {
-          <span class="tag success">Fresh at {{ enhanced.lastUpdated() | date: 'HH:mm:ss' }}</span>
-        }
-      </div>
 
-      <div class="content-box">
-        @if (enhanced.value(); as data) {
-          <div class="data success" [class.stale]="enhanced.isStale()">
-            {{ data }}
+        @if (enhanced.error(); as err) {
+          <div class="payload-error"><strong>Fetch Failed:</strong> {{ err }}</div>
+        } @else if (enhanced.hasValue()) {
+          <div class="payload">{{ enhanced.value() }}</div>
+        } @else if (enhanced.isLoading()) {
+          <div class="payload-empty">
+            <div class="spinner"></div>
+            <span>Loading Initial Data...</span>
           </div>
-        } @else if (enhanced.error()) {
-          <div class="data error">Error: {{ enhanced.error() }}</div>
         }
       </div>
     </article>
