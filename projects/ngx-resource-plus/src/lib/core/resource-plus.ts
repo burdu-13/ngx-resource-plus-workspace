@@ -1,66 +1,79 @@
-import { resource, computed, signal, Signal } from '@angular/core';
-
-import { signalTimeout } from '../shared/utils/signal-helpers';
+import {
+  resource,
+  computed,
+  signal,
+  ResourceRef,
+  ResourceLoaderParams,
+  inject,
+} from '@angular/core';
 import { ResourcePlusOptions } from '../shared/interfaces/options';
 import { ResourcePlusRef } from '../shared/interfaces/ref';
+import { executeRetryLoader } from '../features/retry-handler';
+import { createSwrBuffer } from '../features/swr-handler';
+import { RESOURCE_PLUS_CONFIG } from '../shared/tokens/config.token';
 
 export function resourcePlus<T, P>(options: ResourcePlusOptions<T, P>): ResourcePlusRef<T> {
-  const { swr, retry, loader, ...nativeOptions } = options;
+  const globalConfig = inject(RESOURCE_PLUS_CONFIG, { optional: true });
 
-  if (!loader && !nativeOptions.stream) {
-    throw new Error('[ngx-resource-plus]: Either a loader or a stream must be provided.');
-  }
-
-  const lastSuccessValue = signal<T | undefined>(undefined);
   const lastUpdated = signal<Date | null>(null);
-  const retryCount = signal(0);
+  const retryAttempt = signal(0);
 
-  const enhancedLoader = async (param: any) => {
-    const config = retry;
-    const maxRetries = typeof config === 'number' ? config : (config?.count ?? 0);
+  const loader = 'loader' in options ? options.loader : undefined;
+  const stream = 'stream' in options ? options.stream : undefined;
 
-    for (let attempt = 0; attempt <= maxRetries; attempt++) {
-      try {
-        const result = await loader!(param);
+  const swrEnabled = options.swr ?? globalConfig?.swr ?? true;
+  const retryConfig = options.retry ?? globalConfig?.retry;
+
+  const enhancedLoader = loader
+    ? async (ctx: ResourceLoaderParams<P>): Promise<T> => {
+        const result = retryConfig
+          ? await executeRetryLoader(ctx, loader, retryConfig, (a) => retryAttempt.set(a))
+          : await Promise.resolve(loader(ctx));
+
         lastUpdated.set(new Date());
-        retryCount.set(0);
+        retryAttempt.set(0);
         return result;
-      } catch (error) {
-        if (attempt >= maxRetries) throw error;
-        retryCount.update((c) => c + 1);
-
-        const delay =
-          typeof config === 'object'
-            ? config.backoff === 'exponential'
-              ? config.delay * Math.pow(2, attempt)
-              : config.delay
-            : 1000;
-
-        await signalTimeout(delay);
       }
-    }
-    throw new Error('Retry limit reached');
-  };
+    : undefined;
 
-  const nativeResource = resource<T, P>({
-    ...nativeOptions,
-    loader: enhancedLoader,
-  });
+  const nativeResource: ResourceRef<T | undefined> = enhancedLoader
+    ? resource({
+        loader: enhancedLoader,
+        params: options.params,
+        defaultValue: options.defaultValue,
+        equal: options.equal,
+        injector: options.injector,
+        debugName: options.debugName,
+      })
+    : resource({
+        stream: stream!,
+        params: options.params,
+        defaultValue: options.defaultValue,
+        equal: options.equal,
+        injector: options.injector,
+        debugName: options.debugName,
+      });
 
-  const value = computed(() => {
-    const current = nativeResource.value();
-    if (current !== undefined) {
-      lastSuccessValue.set(current);
-      return current;
-    }
-    return swr !== false ? lastSuccessValue() : undefined;
-  });
+  const { value, buffer } = createSwrBuffer(nativeResource.value, swrEnabled);
+
+  const isStale = computed(() => nativeResource.isLoading() && buffer() !== undefined);
 
   return {
-    ...nativeResource,
     value,
-    isStale: computed(() => nativeResource.isLoading() && lastSuccessValue() !== undefined),
+    isStale,
     lastUpdated: lastUpdated.asReadonly(),
-    retryAttempt: retryCount.asReadonly(),
-  } as unknown as ResourcePlusRef<T>;
+    retryAttempt: retryAttempt.asReadonly(),
+
+    status: nativeResource.status,
+    error: nativeResource.error,
+    isLoading: nativeResource.isLoading,
+    hasValue: nativeResource.hasValue,
+    snapshot: nativeResource.snapshot,
+
+    reload: () => nativeResource.reload(),
+    destroy: () => nativeResource.destroy(),
+    set: (val: T | undefined) => nativeResource.set(val),
+    update: (updater: (value: T | undefined) => T | undefined) => nativeResource.update(updater),
+    asReadonly: () => nativeResource.asReadonly(),
+  };
 }

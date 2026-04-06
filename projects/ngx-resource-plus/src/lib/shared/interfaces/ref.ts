@@ -1,6 +1,6 @@
 import { ResourceRef, Signal } from '@angular/core';
 
-export type ResourcePlusRef<T> = Omit<ResourceRef<T>, 'value'> & {
+export type ResourcePlusRef<T> = Omit<ResourceRef<T | undefined>, 'value'> & {
   readonly value: Signal<T | undefined>;
   readonly isStale: Signal<boolean>;
   readonly lastUpdated: Signal<Date | null>;
