@@ -5,68 +5,63 @@ import {
   Signal,
   ResourceRef,
   computed,
+  WritableSignal,
 } from '@angular/core';
 import { ResourcePlusRef } from '../src/lib/shared/interfaces/ref';
 
-function createHasValueMock<T>(value: Signal<T | undefined>) {
-  const guard = function (
-    this: ResourceRef<T | undefined>,
-  ): this is ResourceRef<Exclude<T, undefined>> {
-    return value() !== undefined;
-  };
-
-  return guard as (() => boolean) & {
-    (this: ResourceRef<T | undefined>): this is ResourceRef<Exclude<T, undefined>>;
-  };
+export interface MockResourcePlus<T> extends ResourcePlusRef<T> {
+  internalValue: WritableSignal<T | undefined>;
+  internalIsLoading: WritableSignal<boolean>;
+  internalIsStale: WritableSignal<boolean>;
+  internalRetryAttempt: WritableSignal<number>;
+  internalStatus: WritableSignal<ResourceStatus>;
+  internalError: WritableSignal<any>;
 }
 
-export function createMockResourcePlus<T>(initialValue?: T): ResourcePlusRef<T> {
-  const valueSignal = signal<T | undefined>(initialValue);
-  const loadingSignal = signal<boolean>(false);
+function createHasValueMock<T>(value: Signal<T | undefined>) {
+  return function (this: ResourceRef<T | undefined>) {
+    return value() !== undefined;
+  } as any;
+}
 
-  const statusSignal = signal<ResourceStatus>(initialValue !== undefined ? 'resolved' : 'idle');
-  const errorSignal = signal<Error | undefined>(undefined);
+export function createMockResourcePlus<T>(initialValue?: T): MockResourcePlus<T> {
+  const value = signal<T | undefined>(initialValue);
+  const isLoading = signal<boolean>(false);
+  const isStale = signal<boolean>(false);
+  const retryAttempt = signal<number>(0);
+  const status = signal<ResourceStatus>(initialValue !== undefined ? 'resolved' : 'idle');
+  const error = signal<any>(undefined);
 
-  const snapshotSignal = computed<ResourceSnapshot<T | undefined>>(() => {
-    const s = statusSignal();
-    const v = valueSignal();
-    const e = errorSignal();
-
-    if (s === 'resolved' || s === 'local') {
-      return { status: s, value: v };
-    }
-    if (s === 'error') {
-      return { status: 'error', value: v, error: e ?? new Error('Unknown error') };
-    }
-    if (s === 'loading' || s === 'reloading') {
-      return { status: s, value: v };
-    }
-
-    return { status: 'idle', value: v };
-  });
+  const snapshot = computed<ResourceSnapshot<T | undefined>>(() => ({
+    status: status(),
+    value: value(),
+    error: error(),
+  }));
 
   return {
-    value: valueSignal.asReadonly(),
-    isStale: signal<boolean>(false).asReadonly(),
+    value: value.asReadonly(),
+    isLoading: isLoading.asReadonly(),
+    isStale: isStale.asReadonly(),
+    retryAttempt: retryAttempt.asReadonly(),
+    status: status.asReadonly(),
+    error: error.asReadonly(),
     lastUpdated: signal<Date | null>(null).asReadonly(),
-    retryAttempt: signal<number>(0).asReadonly(),
-
-    status: statusSignal.asReadonly(),
-    error: errorSignal.asReadonly(),
-    isLoading: loadingSignal.asReadonly(),
-    hasValue: createHasValueMock(valueSignal),
-    snapshot: snapshotSignal,
-
-    reload: (): boolean => {
-      loadingSignal.set(true);
+    hasValue: createHasValueMock(value),
+    snapshot,
+    internalValue: value,
+    internalIsLoading: isLoading,
+    internalIsStale: isStale,
+    internalRetryAttempt: retryAttempt,
+    internalStatus: status,
+    internalError: error,
+    reload: () => {
+      isLoading.set(true);
       return true;
     },
-    destroy: (): void => {},
-    set: (val: T | undefined): void => valueSignal.set(val),
-    update: (updater: (value: T | undefined) => T | undefined): void => {
-      valueSignal.update(updater);
-    },
-    asReadonly: function (this: ResourcePlusRef<T>) {
+    destroy: () => {},
+    set: (v) => value.set(v),
+    update: (fn) => value.update(fn),
+    asReadonly: function () {
       return this;
     },
   };

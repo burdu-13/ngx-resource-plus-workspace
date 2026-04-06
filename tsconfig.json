@@ -3,13 +3,15 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
+    "rootDir": ".",
+    "paths": {
+      "ngx-resource-plus": ["./projects/ngx-resource-plus/src/public-api.ts"],
+      "ngx-resource-plus/testing": ["./projects/ngx-resource-plus/testing/public-api.ts"]
+    },
     "strict": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitReturns": true,
-    "paths": {
-      "ngx-resource-plus": ["./dist/ngx-resource-plus"]
-    },
     "noFallthroughCasesInSwitch": true,
     "skipLibCheck": true,
     "isolatedModules": true,
