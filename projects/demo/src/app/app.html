@@ -1,34 +1,34 @@
 <main class="dashboard">
   <header class="header">
     <div class="header-title">
-      <h1>ngx-resource-plus</h1>
-      <p class="subtitle">
-        Simulating a flaky network (fails twice, succeeds third). Watch the UX difference.
+      <h1 class="display-hero">ngx-resource-plus</h1>
+      <p class="subtitle body-large">
+        Simulating a flaky network. Experience the technical luxury of SWR and auto-retries.
       </p>
     </div>
     <button class="btn-primary" (click)="triggerReload()">
-      <span class="btn-text">Trigger Fetch</span>
+      Trigger Fetch
     </button>
   </header>
 
   <section class="grid">
-    <article class="panel standard-panel">
+    <article class="panel level-2">
       <header class="panel-header">
-        <h2>Standard resource()</h2>
+        <h2 class="sub-heading">Standard resource()</h2>
         <div class="feature-list">
-          <span class="trait negative">Flickers on reload</span>
-          <span class="trait negative">Crashes on first error</span>
+          <span class="trait trait-negative">Flickers on reload</span>
+          <span class="trait trait-negative">Crashes on first error</span>
         </div>
       </header>
 
       <div class="status-ribbon">
         @let nativeStatus = native.status();
-        <span class="status-badge" [attr.data-status]="nativeStatus">
+        <span class="status-badge tabular" [attr.data-status]="nativeStatus">
           Status: {{ nativeStatus }}
         </span>
       </div>
 
-      <div class="data-window" [class.loading]="native.isLoading()" [class.error]="native.error()">
+      <div class="data-window code-block" [class.loading]="native.isLoading()" [class.error]="native.error()">
         @let nativeError = native.error();
         @if (nativeError) {
           <div class="payload-error"><strong>Fetch Failed:</strong> {{ nativeError }}</div>
@@ -37,24 +37,24 @@
         } @else {
           <div class="payload-empty">
             <div class="spinner"></div>
-            <span>No Data (Flicker)</span>
+            <span class="caption">No Data (Flicker)</span>
           </div>
         }
       </div>
     </article>
 
-    <article class="panel enhanced-panel">
+    <article class="panel enhanced-panel level-3">
       <header class="panel-header">
-        <h2>Enhanced resourcePlus()</h2>
+        <h2 class="sub-heading">Enhanced resourcePlus()</h2>
         <div class="feature-list">
-          <span class="trait positive">SWR (Flicker-free)</span>
-          <span class="trait positive">Auto-Retries</span>
+          <span class="trait trait-positive">SWR (Flicker-free)</span>
+          <span class="trait trait-positive">Auto-Retries</span>
         </div>
       </header>
 
       <div class="status-ribbon">
         @let enhancedStatus = enhanced.status();
-        <span class="status-badge" [attr.data-status]="enhancedStatus">
+        <span class="status-badge tabular" [attr.data-status]="enhancedStatus">
           Status: {{ enhancedStatus }}
         </span>
         <div class="meta-pills">
@@ -62,21 +62,23 @@
           @let lastUp = enhanced.lastUpdated();
 
           @if (retries > 0) {
-            <span class="pill warning">Retry: {{ retries }}</span>
+            <span class="badge badge-warning tabular">Retry: {{ retries }}</span>
           }
           @if (lastUp) {
-            <span class="pill success">Fresh: {{ lastUp | date: 'HH:mm:ss' }}</span>
+            <span class="badge badge-success tabular">Fresh: {{ lastUp | date: 'HH:mm:ss' }}</span>
           }
         </div>
       </div>
 
-      <div class="data-window" [class.stale]="enhanced.isStale()" [class.error]="enhanced.error()">
+      <div class="data-window code-block" [class.stale]="enhanced.isStale()" [class.error]="enhanced.error()">
         @if (enhanced.isStale()) {
-          <div class="revalidating-badge"><span class="pulse"></span> Revalidating</div>
+          <div class="revalidating-badge">
+            <span class="pulse"></span> 
+            <span class="caption">Revalidating</span>
+          </div>
         }
 
         @let enhancedError = enhanced.error();
-
         @if (enhancedError) {
           <div class="payload-error"><strong>Fetch Failed:</strong> {{ enhancedError }}</div>
         } @else if (enhanced.hasValue()) {
@@ -84,7 +86,7 @@
         } @else if (enhanced.isLoading()) {
           <div class="payload-empty">
             <div class="spinner"></div>
-            <span>Loading Initial Data...</span>
+            <span class="caption">Loading Initial Data...</span>
           </div>
         }
       </div>
