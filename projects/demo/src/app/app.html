@@ -30,12 +30,10 @@
 
       <div class="data-window" [class.loading]="native.isLoading()" [class.error]="native.error()">
         @let nativeError = native.error();
-        @let nativeValue = native.value();
-
         @if (nativeError) {
           <div class="payload-error"><strong>Fetch Failed:</strong> {{ nativeError }}</div>
         } @else if (native.hasValue()) {
-          <div class="payload">{{ nativeValue }}</div>
+          <div class="payload">{{ native.value() }}</div>
         } @else {
           <div class="payload-empty">
             <div class="spinner"></div>
@@ -78,12 +76,11 @@
         }
 
         @let enhancedError = enhanced.error();
-        @let enhancedValue = enhanced.value();
 
         @if (enhancedError) {
           <div class="payload-error"><strong>Fetch Failed:</strong> {{ enhancedError }}</div>
         } @else if (enhanced.hasValue()) {
-          <div class="payload">{{ enhancedValue }}</div>
+          <div class="payload">{{ enhanced.value() }}</div>
         } @else if (enhanced.isLoading()) {
           <div class="payload-empty">
             <div class="spinner"></div>

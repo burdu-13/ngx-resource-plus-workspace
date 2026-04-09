@@ -42,6 +42,13 @@ export class App {
   public readonly enhanced = resourcePlus({
     params: () => this.requestTrigger(),
     loader: this.createFlakyApi('Enhanced API'),
+
+    retry: {
+      count: 2,
+      delay: 1000,
+      backoff: 'fixed',
+    },
+    swr: true,
   });
 
   public triggerReload(): void {
