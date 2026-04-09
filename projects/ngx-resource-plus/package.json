@@ -1,9 +1,26 @@
 {
   "name": "ngx-resource-plus",
-  "version": "0.0.1",
+  "version": "1.0.0",
+  "description": "A high-performance Angular 21 utility for Signal-based Stale-While-Revalidate and resilient resource management.",
+  "license": "MIT",
+  "keywords": [
+    "angular",
+    "signals",
+    "swr",
+    "resource",
+    "angular-21",
+    "frontend-resilience",
+    "stale-while-revalidate",
+    "retry"
+  ],
+  "author": "",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
   "peerDependencies": {
-    "@angular/common": "^21.2.0",
-    "@angular/core": "^21.2.0"
+    "@angular/common": ">=21.0.0",
+    "@angular/core": ">=21.0.0"
   },
   "dependencies": {
     "tslib": "^2.3.0"

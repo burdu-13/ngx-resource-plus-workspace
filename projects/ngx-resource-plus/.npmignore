@@ -1,0 +1,14 @@
+# Test files
+**/*.spec.ts
+
+# TypeScript configs
+**/tsconfig.*.json
+
+# Editor configs
+.editorconfig
+.prettierrc
+.vscode/
+
+# Git
+.git/
+.gitignore
