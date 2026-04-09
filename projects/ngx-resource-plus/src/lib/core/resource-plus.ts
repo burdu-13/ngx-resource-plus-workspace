@@ -67,7 +67,9 @@ export function resourcePlus<T, P>(options: ResourcePlusOptions<T, P>): Resource
     status: nativeResource.status,
     error: nativeResource.error,
     isLoading: nativeResource.isLoading,
-    hasValue: nativeResource.hasValue,
+
+    hasValue: nativeResource.hasValue.bind(nativeResource) as typeof nativeResource.hasValue,
+
     snapshot: nativeResource.snapshot,
 
     reload: () => nativeResource.reload(),

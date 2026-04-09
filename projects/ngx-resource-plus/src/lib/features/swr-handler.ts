@@ -1,16 +1,19 @@
 import { computed, signal, Signal, WritableSignal } from '@angular/core';
 
-export function createSwrBuffer<T>(nativeValue: Signal<T | undefined>, enabled: boolean) {
-  const buffer: WritableSignal<T | undefined> = signal(undefined);
+export function createSwrBuffer<T>(nativeValue: Signal<T | undefined>, swrEnabled: boolean) {
+  let cachedValue: T | undefined = undefined;
 
-  const value = computed(() => {
+  const buffer = computed(() => {
     const current = nativeValue();
     if (current !== undefined) {
-      buffer.set(current);
-      return current;
+      cachedValue = current;
     }
-    return enabled ? buffer() : undefined;
+    return cachedValue;
   });
 
-  return { value, buffer: buffer.asReadonly() };
+  const value = computed(() => {
+    return swrEnabled ? buffer() : nativeValue();
+  });
+
+  return { value, buffer };
 }
